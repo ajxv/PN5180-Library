@@ -150,6 +150,38 @@ ISO15693ErrorCode PN5180ISO15693::readSingleBlock(uint8_t *uid, uint8_t blockNo,
   return ISO15693_EC_OK;
 }
 
+/**
+ * @brief Writes the Application Family Identifier (AFI) to a tag.
+ *
+ * This method constructs and sends a command to write the AFI value to the specified UID.
+ * The command format includes both flags and UID, followed by the AFI value.
+ * Debug output is enabled if DEBUG is defined, printing the command to the Serial console.
+ *
+ * @param uid Pointer to an array containing the UID of the tag (8 bytes).
+ * @param afi The AFI value to be written to the tag.
+ * @return ISO15693ErrorCode indicating the success or failure of the operation.
+ */
+ISO15693ErrorCode PN5180ISO15693::writeAFI(uint8_t *uid, uint8_t afi) {
+  // Construct the command for writing AFI
+  uint8_t writeAFICommand[] = { 0x22, 0x27, 0, 0, 0, 0, 0, 0, 0, 0, afi }; // UID has LSB first!
+  for (int i = 0; i < 8; i++) {
+    writeAFICommand[2 + i] = uid[i];
+  }
+
+#ifdef DEBUG
+  Serial.print("Write AFI Command: ");
+  for (int i = 0; i < sizeof(writeAFICommand); i++) {
+    Serial.print(writeAFICommand[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+#endif
+
+  uint8_t* resultPtr;
+  ISO15693ErrorCode rc = issueISO15693Command(writeAFICommand, sizeof(writeAFICommand), &resultPtr);
+  return rc;
+}
+
 /*
  * Write single block, code=21
  *

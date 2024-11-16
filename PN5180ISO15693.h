@@ -41,6 +41,7 @@ class PN5180ISO15693 : public PN5180 {
 public:
   PN5180ISO15693(uint8_t SSpin, uint8_t BUSYpin, uint8_t RSTpin);
   ISO15693ErrorCode writeAFI(uint8_t *uid, uint8_t afi);
+  ISO15693ErrorCode readAFI(uint8_t *uid, uint8_t *afi);
   
 private:
   ISO15693ErrorCode issueISO15693Command(uint8_t *cmd, uint8_t cmdLen, uint8_t **resultPtr);

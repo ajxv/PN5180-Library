@@ -25,7 +25,7 @@ void setup() {
 }
 
 void loop() {
-  uint8_t uid[8];
+  uint8_t uid[8], afi;
   if (nfc.getInventory(uid) == ISO15693_EC_OK) {
     Serial.print(F("UID: "));
     for (int i = 0; i < 8; i++) {
@@ -34,7 +34,13 @@ void loop() {
     }
     Serial.println();
 
-    Serial.println(F("Enter AFI value (in hex, e.g., CC):"));
+    nfc.readAFI(uid, &afi);
+    Serial.print("Current AFI: ");
+    Serial.println(afi, HEX);
+
+    delay(1000); // Wait 1 second
+
+    Serial.println(F("Enter new AFI value (in hex, e.g., CC):"));
     while (Serial.available() == 0) {
       // Wait for user input
     }

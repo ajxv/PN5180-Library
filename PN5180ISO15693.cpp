@@ -150,6 +150,98 @@ ISO15693ErrorCode PN5180ISO15693::readSingleBlock(uint8_t *uid, uint8_t blockNo,
   return ISO15693_EC_OK;
 }
 
+/**
+ * @brief Writes the Application Family Identifier (AFI) to a tag.
+ *
+ * This method constructs and sends a command to write the AFI value to the specified UID.
+ * The command format includes both flags and UID, followed by the AFI value.
+ * Debug output is enabled if DEBUG is defined, printing the command to the Serial console.
+ *
+ * @param uid Pointer to an array containing the UID of the tag (8 bytes).
+ * @param afi The AFI value to be written to the tag.
+ * @return ISO15693ErrorCode indicating the success or failure of the operation.
+ */
+ISO15693ErrorCode PN5180ISO15693::writeAFI(uint8_t *uid, uint8_t afi) {
+  // Construct the command for writing AFI
+  uint8_t writeAFICommand[] = { 0x22, 0x27, 0, 0, 0, 0, 0, 0, 0, 0, afi }; // UID has LSB first!
+  for (int i = 0; i < 8; i++) {
+    writeAFICommand[2 + i] = uid[i];
+  }
+
+#ifdef DEBUG
+  Serial.print("Write AFI Command: ");
+  for (int i = 0; i < sizeof(writeAFICommand); i++) {
+    Serial.print(writeAFICommand[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+#endif
+
+  uint8_t* resultPtr;
+  ISO15693ErrorCode rc = issueISO15693Command(writeAFICommand, sizeof(writeAFICommand), &resultPtr);
+  return rc;
+}
+
+/**
+ * @brief Reads the Application Family Identifier (AFI) from a tag.
+ *
+ * This method uses the getSystemInfo command to retrieve the AFI value.
+ * The AFI value is included in the system information response if the
+ * tag supports and has an AFI value set.
+ *
+ * @param uid Pointer to an array containing the UID of the tag (8 bytes).
+ * @param afi Pointer to store the read AFI value.
+ * @return ISO15693ErrorCode indicating the success or failure of the operation.
+ */
+ISO15693ErrorCode PN5180ISO15693::readAFI(uint8_t *uid, uint8_t *afi) {
+  uint8_t sysInfo[] = { 0x22, 0x2b, 0, 0, 0, 0, 0, 0, 0, 0 };  // Get System Info command
+  
+  // Copy UID into command buffer (LSB first)
+  for (int i = 0; i < 8; i++) {
+    sysInfo[2+i] = uid[i];
+  }
+
+#ifdef DEBUG
+  PN5180DEBUG(F("Read AFI using System Info command: "));
+  for (int i=0; i<sizeof(sysInfo); i++) {
+    PN5180DEBUG(formatHex(sysInfo[i]));
+    PN5180DEBUG(" ");
+  }
+  PN5180DEBUG("\n");
+#endif
+
+  uint8_t *readBuffer;
+  ISO15693ErrorCode rc = issueISO15693Command(sysInfo, sizeof(sysInfo), &readBuffer);
+  if (rc != ISO15693_EC_OK) {
+    return rc;
+  }
+
+  // Check info flags to see if AFI is supported/present
+  uint8_t infoFlags = readBuffer[1];
+  if (!(infoFlags & 0x02)) {  // AFI flag not set
+    return ISO15693_EC_OPTION_NOT_SUPPORTED;
+  }
+
+  // Calculate position of AFI in response buffer
+  uint8_t *p = &readBuffer[10];  // Start after UID
+  
+  // Skip DSFID if present
+  if (infoFlags & 0x01) {  // DSFID flag
+    p++;
+  }
+
+  // Read AFI value
+  *afi = *p;
+  
+#ifdef DEBUG
+  PN5180DEBUG(F("AFI value read: 0x"));
+  PN5180DEBUG(formatHex(*afi));
+  PN5180DEBUG("\n");
+#endif
+
+  return ISO15693_EC_OK;
+}
+
 /*
  * Write single block, code=21
  *

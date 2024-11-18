@@ -7,6 +7,11 @@ Arduino Uno / Arduino ESP-32 library for PN5180-NFC Module from NXP Semiconducto
 
 Release Notes:
 
+Version 1.9.0 - 18.11.2024
+
+    * Added methods for AFI read and write
+    * Added example code for AFI read and write methods
+
 Version 1.8.1 - 19.08.2021
 
 	* Added changes from Nettermann90
@@ -50,3 +55,7 @@ Version 1.1 - 26.10.2018
 Version 1.0.x - 21.09.2018
 
 	* Initial versions
+
+## Credits
+
+This library is originally developed by [Andreas Trappmann](https://github.com/ATrappmann/PN5180-Library). This fork is maintained by [ajxv](https://github.com/ajxv) and includes additional methods for AFI read and write.
